@@ -3,8 +3,8 @@ import { Mic, MicOff, Loader } from "lucide-react";
 export default function VoiceButton({ recording, processing, onStart, onStop }) {
   if (processing) {
     return (
-      <button className="w-20 h-20 rounded-full bg-harvey-700 flex items-center justify-center cursor-not-allowed">
-        <Loader className="w-8 h-8 animate-spin text-white" />
+      <button className="w-16 h-16 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center cursor-not-allowed">
+        <Loader className="w-7 h-7 animate-spin text-cyan-400" />
       </button>
     );
   }
@@ -13,9 +13,9 @@ export default function VoiceButton({ recording, processing, onStart, onStop }) 
     return (
       <button
         onClick={onStop}
-        className="w-20 h-20 rounded-full bg-red-600 hover:bg-red-500 flex items-center justify-center recording-pulse transition-colors"
+        className="w-16 h-16 rounded-full bg-red-500/90 hover:bg-red-400 flex items-center justify-center recording-pulse transition-all shadow-lg shadow-red-500/30"
       >
-        <MicOff className="w-8 h-8 text-white" />
+        <MicOff className="w-7 h-7 text-white" />
       </button>
     );
   }
@@ -23,9 +23,9 @@ export default function VoiceButton({ recording, processing, onStart, onStop }) 
   return (
     <button
       onClick={onStart}
-      className="w-20 h-20 rounded-full bg-harvey-500 hover:bg-harvey-600 flex items-center justify-center transition-colors shadow-lg shadow-harvey-500/30"
+      className="w-16 h-16 rounded-full bg-gradient-to-br from-cyan-500 to-indigo-600 hover:from-cyan-400 hover:to-indigo-500 flex items-center justify-center transition-all shadow-lg shadow-cyan-500/25 hover:shadow-cyan-500/40 hover:scale-105"
     >
-      <Mic className="w-8 h-8 text-white" />
+      <Mic className="w-7 h-7 text-white" />
     </button>
   );
 }

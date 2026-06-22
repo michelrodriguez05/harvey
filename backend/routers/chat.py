@@ -1,13 +1,12 @@
 from fastapi import APIRouter, HTTPException, UploadFile, File
 from fastapi.responses import Response
 from pydantic import BaseModel
-from backend.assistant import chat
+
+from backend.services.conversation import conversation_service, format_user_error, get_llm_status
 from backend.voice.stt import transcribe_audio_file
 from backend.voice.tts import text_to_speech_bytes
 
 router = APIRouter(prefix="/api", tags=["chat"])
-
-conversation_history: list[dict] = []
 
 
 class MessageRequest(BaseModel):
@@ -16,27 +15,35 @@ class MessageRequest(BaseModel):
 
 class MessageResponse(BaseModel):
     reply: str
+    agent: str = "orchestrator"
+    tools_used: list[str] = []
+    youtube_video_id: str | None = None
+    youtube_title: str | None = None
+
+
+@router.get("/health")
+def health_check():
+    status = get_llm_status()
+    return {
+        "status": "ok" if status["ok"] else "misconfigured",
+        "api_key_ok": status["ok"],
+        "llm_provider": status["provider"],
+        "llm_model": status["model"],
+        "api_key_message": status.get("message"),
+    }
 
 
 @router.post("/chat", response_model=MessageResponse)
 def send_message(req: MessageRequest):
-    """Envía un mensaje de texto al asistente."""
-    global conversation_history
-    conversation_history.append({"role": "user", "content": req.message})
-
     try:
-        reply = chat(conversation_history)
-        conversation_history.append({"role": "assistant", "content": reply})
-        if len(conversation_history) > 40:
-            conversation_history = conversation_history[-40:]
-        return {"reply": reply}
+        result = conversation_service.chat(req.message)
+        return result
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=400, detail=format_user_error(e))
 
 
 @router.post("/voice/transcribe")
 async def transcribe_voice(audio: UploadFile = File(...)):
-    """Recibe un archivo de audio y retorna el texto transcrito."""
     audio_bytes = await audio.read()
     try:
         text = transcribe_audio_file(audio_bytes, content_type=audio.content_type)
@@ -47,7 +54,6 @@ async def transcribe_voice(audio: UploadFile = File(...)):
 
 @router.post("/voice/speak")
 def speak(req: MessageRequest):
-    """Convierte texto a audio MP3 y lo retorna."""
     try:
         audio_bytes = text_to_speech_bytes(req.message)
         return Response(content=audio_bytes, media_type="audio/mpeg")
@@ -57,27 +63,18 @@ def speak(req: MessageRequest):
 
 @router.post("/voice/chat")
 async def voice_chat(audio: UploadFile = File(...)):
-    """Pipeline completo: audio → texto → asistente → audio de respuesta."""
-    global conversation_history
     audio_bytes = await audio.read()
-
     try:
         text = transcribe_audio_file(audio_bytes, content_type=audio.content_type)
         if not text:
             raise HTTPException(status_code=400, detail="No se entendió el audio")
 
-        conversation_history.append({"role": "user", "content": text})
-        reply = chat(conversation_history)
-        conversation_history.append({"role": "assistant", "content": reply})
-
-        if len(conversation_history) > 40:
-            conversation_history = conversation_history[-40:]
-
-        audio_response = text_to_speech_bytes(reply)
+        result = conversation_service.chat(text)
+        audio_response = text_to_speech_bytes(result["reply"])
         return Response(
             content=audio_response,
             media_type="audio/mpeg",
-            headers={"X-Transcript": text, "X-Reply": reply},
+            headers={"X-Transcript": text, "X-Reply": result["reply"]},
         )
     except HTTPException:
         raise
@@ -87,13 +84,11 @@ async def voice_chat(audio: UploadFile = File(...)):
 
 @router.get("/history")
 def get_history():
-    """Retorna el historial de la conversación."""
-    return {"messages": conversation_history}
+    messages = conversation_service.get_messages()
+    return {"messages": messages}
 
 
 @router.delete("/history")
 def clear_history():
-    """Limpia el historial de la conversación."""
-    global conversation_history
-    conversation_history = []
+    conversation_service.clear()
     return {"cleared": True}
