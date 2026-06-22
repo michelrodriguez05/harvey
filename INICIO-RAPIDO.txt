@@ -1,0 +1,70 @@
+YARBIS AI - Guia rapida para tu PC principal
+==========================================
+
+COPIAR A TU COMPUTADOR
+----------------------
+1. Copia toda la carpeta "harvey-1" a tu PC (ej: C:\Yarbis)
+2. NO copies la carpeta venv/ ni frontend/node_modules/ si vienen de otra PC
+   (instalar.bat las creara de nuevo)
+
+PRIMERA VEZ (solo una vez)
+--------------------------
+1. Doble clic en: instalar.bat
+2. Edita el archivo .env y pon tu GROQ_API_KEY (gratis en console.groq.com)
+3. Doble clic en: iniciar.bat
+4. Se abrira http://localhost:5173
+
+CADA VEZ QUE QUIERAS USARLO
+---------------------------
+Doble clic en: iniciar.bat
+
+DETENER
+-------
+Doble clic en: detener.bat
+
+INICIO AUTOMATICO CON WINDOWS
+-----------------------------
+1. Ejecuta: instalar-inicio-automatico.bat
+2. Yarbis arrancara solo al encender el PC
+3. Para quitar: desinstalar-inicio-automatico.bat
+
+CON INTERNET (recomendado)
+--------------------------
+- Chat inteligente con Groq (LLM_PROVIDER=groq en .env)
+- YouTube, Google Calendar, busqueda web
+- Voz con respuesta TTS
+
+SIN INTERNET (tareas basicas)
+-----------------------------
+En .env cambia a:
+  LLM_PROVIDER=ollama
+  LLM_MODEL=llama3.2
+
+Instala Ollama: https://ollama.com
+En terminal: ollama pull llama3.2
+
+Funciona offline:
+- Chat con Ollama (modelo local)
+- Memoria, tareas, notas (SQLite local)
+- Reconocimiento de voz del navegador
+
+Requiere internet:
+- Groq / Claude (nube)
+- YouTube, Google Calendar
+- Respuesta en voz TTS (gTTS)
+
+REQUISITOS
+----------
+- Windows 10/11
+- Python 3.11+ (python.org)
+- Node.js 20+ (nodejs.org)
+- Microfono para voz
+- Navegador Chrome o Edge
+
+ARCHIVOS .BAT
+-------------
+instalar.bat                  -> Instala todo (primera vez)
+iniciar.bat                   -> Inicia Yarbis
+detener.bat                   -> Detiene Yarbis
+instalar-inicio-automatico.bat -> Arranca con Windows
+desinstalar-inicio-automatico.bat
